@@ -1,0 +1,7 @@
+# Core dependencies for FPN reproduction
+torch>=2.0.0
+torchvision>=0.15.0
+opencv-python>=4.5.0
+matplotlib>=3.5.0
+pycocotools>=2.0.0
+pillow>=9.0.0
