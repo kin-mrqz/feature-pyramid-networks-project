@@ -1,39 +1,45 @@
-import os
-import torch
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 from setuptools import setup
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
-this_file = os.path.dirname(os.path.realpath(__file__))
+sources = [
+    'src/crop_and_resize_extension.cpp',
+    'src/crop_and_resize.c',
+    'src/crop_and_resize_gpu.c',
+]
 
-sources = ['src/crop_and_resize.cpp']  # Changed from .c to .cpp
-headers = ['src/crop_and_resize.h']
-defines = []
-with_cuda = False
+cuda_sources = ['src/crop_and_resize_kernel.cu']
 
-extra_objects = []
-if torch.cuda.is_available():
-    print('Including CUDA code.')
-    sources += ['src/crop_and_resize_gpu.cpp']  # Changed from .c to .cpp
-    headers += ['src/crop_and_resize_gpu.h']
-    defines += [('WITH_CUDA', None)]
-    extra_objects += ['src/cuda/crop_and_resize_kernel.cu']  # Remove .o extension
-    with_cuda = True
+ext_modules = []
 
-sources = [os.path.join(this_file, fname) for fname in sources]
-headers = [os.path.join(this_file, fname) for fname in headers]
-extra_objects = [os.path.join(this_file, fname) for fname in extra_objects]
+try:
+    import torch
+    if torch.cuda.is_available():
+        ext_modules.append(
+            CUDAExtension(
+                name='roi.align._ext.crop_and_resize',
+                sources=sources + cuda_sources,
+            )
+        )
+    else:
+        from torch.utils.cpp_extension import CppExtension
+        ext_modules.append(
+            CppExtension(
+                name='roi.align._ext.crop_and_resize',
+                sources=sources,
+            )
+        )
+except Exception:
+    # fallback to CPU-only if torch is missing at build-time
+    from torch.utils.cpp_extension import CppExtension
+    ext_modules.append(
+        CppExtension(
+            name='roi.align._ext.crop_and_resize',
+            sources=sources,
+        )
+    )
 
 setup(
-    name='crop_and_resize',
-    ext_modules=[
-        CUDAExtension(
-            name='roi.align._ext.crop_and_resize',
-            sources=sources + extra_objects,
-            define_macros=defines,
-            extra_compile_args={'cxx': ['-std=c++14'],
-                              'nvcc': ['-O2']}
-        )
-    ],
-    cmdclass={
-        'build_ext': BuildExtension
-    })
+    name='roi_align_crop_and_resize',
+    ext_modules=ext_modules,
+    cmdclass={'build_ext': BuildExtension}
+)
