@@ -1,2 +1,16 @@
+# Ignore local virtual environments and caches
+COMP3314/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Ignore outputs and models
+outputs/
 .idea/
 __pycache__/

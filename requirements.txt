@@ -1,0 +1,9 @@
+# Minimal requirements for running/train/eval (please pin exact versions locally)
+torch
+torchvision
+numpy
+Pillow
+tensorboardX
+pyyaml
+opencv-python
+cython
