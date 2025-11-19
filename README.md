@@ -1,7 +1,26 @@
-# easy-fpn.pytorch
+# Group 27: Feature Pyramid Network - Modern PyTorch Implementation
 
-An easy implementation of [FPN](https://arxiv.org/pdf/1612.03144.pdf) in PyTorch based on our [easy-faster-rcnn.pytorch](https://github.com/potterhsu/easy-faster-rcnn.pytorch) project.
+A modernized implementation of [FPN](https://arxiv.org/pdf/1612.03144.pdf) in PyTorch, based on [easy-fpn.pytorch](https://github.com/potterhsu/easy-fpn.pytorch). Updated for PyTorch 2.x with native torchvision operations, eliminating the need for custom CUDA compilation.
 
+## Key Differences from Original
+
+**PyTorch Compatibility:**
+- Updated from PyTorch 0.4.1 to PyTorch 2.x
+- Replaced deprecated `torch.utils.ffi` with modern APIs
+- Removed legacy CUDA extension dependencies
+
+**Simplified Dependencies:**
+- Uses `torchvision.ops.nms` instead of custom CUDA NMS
+- Uses `torchvision.ops.roi_align` instead of custom CUDA ROI Align
+- No manual CUDA compilation required
+
+**Bug Fixes:**
+- Fixed P6 generation: corrected `kernel_size=1` to `kernel_size=2` in max pooling
+- Fixed device placement issues for CUDA/CPU tensor operations
+
+**Performance:**
+- Achieves **75.39% mAP** on PASCAL VOC 2007 (reference: 76%)
+- Fully functional with modern PyTorch 2.x and torchvision
 
 ## Demo
 
@@ -10,12 +29,11 @@ An easy implementation of [FPN](https://arxiv.org/pdf/1612.03144.pdf) in PyTorch
 
 ## Features
 
-* Supports PyTorch 0.4.1
+* Supports PyTorch 2.x with CUDA
 * Supports `PASCAL VOC 2007` and `MS COCO 2017` datasets
-* Supports `ResNet-18`, `ResNet-50` and `ResNet-101` backbones (from official PyTorch model)
+* Supports `ResNet-18`, `ResNet-50` and `ResNet-101` backbones (from torchvision)
 * Supports `ROI Pooling` and `ROI Align` pooling modes
-* Matches the performance reported by the original paper
-* It's efficient with maintainable, readable and clean code
+* Clean, maintainable code with modern PyTorch practices
 
 
 ## Benchmarking
@@ -25,350 +43,120 @@ An easy implementation of [FPN](https://arxiv.org/pdf/1612.03144.pdf) in PyTorch
     * Train: 2007 trainval (5011 images)
     * Eval: 2007 test (4952 images)
 
-    <table>
-        <tr>
-            <th>Implementation</th>
-            <th>Backbone</th>
-            <th>GPU</th>
-            <th>Training Speed (FPS)</th>
-            <th>Inference Speed (FPS)</th>
-            <th>mAP</th>
-            <th>image_min_side</th>
-            <th>image_max_side</th>
-            <th>anchor_ratios</th>
-            <th>anchor_scales</th>
-            <th>pooling_mode</th>
-            <th>rpn_pre_nms_top_n (train)</th>
-            <th>rpn_post_nms_top_n (train)</th>
-            <th>rpn_pre_nms_top_n (eval)</th>
-            <th>rpn_post_nms_top_n (eval)</th>
-            <th>learning_rate</th>
-            <th>momentum</th>
-            <th>weight_decay</th>
-            <th>step_lr_size</th>
-            <th>step_lr_gamma</th>
-            <th>num_steps_to_finish</th>
-        </tr>
-        <tr>
-            <td>
-                <a href="https://drive.google.com/open?id=1Y3hipZECPCkywbHz1EBBISalz9bkwroP">
-                    Ours
-                </a>
-            </td>
-            <td>ResNet-101</td>
-            <td>GTX 1080 Ti</td>
-            <td>~ 3.3</td>
-            <td>~ 9.5</td>
-            <td>0.7627|0.7604 (60k|70k)</td>
-            <td>800</td>
-            <td>1333</td>
-            <td>[(1, 2), (1, 1), (2, 1)]</td>
-            <td>[1]</td>
-            <td>align</td>
-            <td>12000</td>
-            <td>2000</td>
-            <td>6000</td>
-            <td>1000</td>
-            <td>0.001</td>
-            <td>0.9</td>
-            <td>0.0001</td>
-            <td>50000</td>
-            <td>0.1</td>
-            <td>70000</td>
-        </tr>
-    </table>
+    | Implementation | Backbone | GPU | mAP | Training Steps |
+    |---|---|---|---|---|
+    | Original ([easy-fpn.pytorch](https://github.com/potterhsu/easy-fpn.pytorch)) | ResNet-101 | GTX 1080 Ti | 0.7627 | 70000 |
+    | **Ours (Modern)** | ResNet-101 | RTX 4080 SUPER | **0.7539** | 80000 |
 
-    > Scroll to right for more configurations
-
-* MS COCO 2017
-
-    * Train: 2017 Train drops images without any objects (117266 images)
-    * Eval: 2017 Val drops images without any objects (4952 images)
-
-    <table>
-        <tr>
-            <th>Implementation</th>
-            <th>Backbone</th>
-            <th>GPU</th>
-            <th>Training Speed (FPS)</th>
-            <th>Inference Speed (FPS)</th>
-            <th>AP@[.5:.95]</th>
-            <th>image_min_side</th>
-            <th>image_max_side</th>
-            <th>anchor_ratios</th>
-            <th>anchor_scales</th>
-            <th>pooling_mode</th>
-            <th>rpn_pre_nms_top_n (train)</th>
-            <th>rpn_post_nms_top_n (train)</th>
-            <th>rpn_pre_nms_top_n (eval)</th>
-            <th>rpn_post_nms_top_n (eval)</th>
-            <th>learning_rate</th>
-            <th>momentum</th>
-            <th>weight_decay</th>
-            <th>step_lr_size</th>
-            <th>step_lr_gamma</th>
-            <th>num_steps_to_finish</th>
-        </tr>
-        <tr>
-            <td>Original Paper</td>
-            <td>ResNet-101</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>0.362</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-        </tr>
-        <tr>
-            <td>
-                <a href="https://drive.google.com/open?id=1KWThl86AGraRROh2J5TqeXxAUyE-OIwa">
-                    Ours
-                </a>
-            </td>
-            <td>ResNet-101</td>
-            <td>GTX 1080 Ti</td>
-            <td>~ 3.3</td>
-            <td>~ 9.5</td>
-            <td>0.363</td>
-            <td>800</td>
-            <td>1333</td>
-            <td>[(1, 2), (1, 1), (2, 1)]</td>
-            <td>[1]</td>
-            <td>align</td>
-            <td>12000</td>
-            <td>2000</td>
-            <td>6000</td>
-            <td>1000</td>
-            <td>0.001</td>
-            <td>0.9</td>
-            <td>0.0001</td>
-            <td><b>900000</b></td>
-            <td>0.1</td>
-            <td><b>1640000</b></td>
-        </tr>
-    </table>
-    
-    > Scroll to right for more configurations
-
-* PASCAL VOC 2007 Cat Dog
-
-    * Train: 2007 trainval drops categories other than cat and dog (750 images)
-    * Eval: 2007 test drops categories other than cat and dog (728 images)
-
-* MS COCO 2017 Person
-
-    * Train: 2017 Train drops categories other than person (64115 images)
-    * Eval: 2017 Val drops categories other than person (2693 images)
-
-* MS COCO 2017 Car
-
-    * Train: 2017 Train drops categories other than car (12251 images)
-    * Eval: 2017 Val drops categories other than car (535 images)
-
-* MS COCO 2017 Animal
-
-    * Train: 2017 Train drops categories other than bird, cat, dog, horse, sheep, cow, elephant, bear, zebra and giraffe (23989 images)
-    * Eval: 2017 Val drops categories other than bird, cat, dog, horse, sheep, cow, elephant, bear, zebra and giraffe (1016 images)
+    **Per-class AP:**
+    ```
+    aeroplane: 79.46%    bicycle: 85.22%      bird: 77.73%         boat: 62.39%
+    bottle: 65.08%       bus: 82.30%          car: 86.65%          cat: 86.26%
+    chair: 59.08%        cow: 83.02%          diningtable: 67.86%  dog: 86.17%
+    horse: 84.00%        motorbike: 78.72%    person: 79.28%       pottedplant: 51.09%
+    sheep: 75.62%        sofa: 65.10%         train: 77.09%        tvmonitor: 75.58%
+    ```
 
 
 ## Requirements
 
-* Python 3.6
-* torch 0.4.1
-* torchvision 0.2.1
+* Python 3.6+
+* PyTorch 2.x with CUDA support
+* torchvision (compatible with PyTorch version)
 * tqdm
-
-    ```
-    $ pip install tqdm
-    ```
-
 * tensorboardX
 
-    ```
-    $ pip install tensorboardX
+    ```bash
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+    pip install tqdm tensorboardX
     ```
 
 
 ## Setup
 
-1. Prepare data
-    1. For `PASCAL VOC 2007`
+1. **Prepare data**
 
-        1. Download dataset
+    For `PASCAL VOC 2007`:
 
-            - [Training / Validation](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) (5011 images)
-            - [Test](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar) (4952 images)
+    1. Download dataset
+        - [Training / Validation](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar) (5011 images)
+        - [Test](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar) (4952 images)
 
-        1. Extract to data folder, now your folder structure should be like:
-
-            ```
-            easy-faster-rcnn.pytorch
-                - data
-                    - VOCdevkit
-                        - VOC2007
-                            - Annotations
-                                - 000001.xml
-                                - 000002.xml
-                                ...
-                            - ImageSets
-                                - Main
-                                    ...
-                                    test.txt
-                                    ...
-                                    trainval.txt
-                                    ...
-                            - JPEGImages
-                                - 000001.jpg
-                                - 000002.jpg
-                                ...
-                    - ...
-            ```
-
-    1. For `MS COCO 2017`
-
-        1. Download dataset
-
-            - [2017 Train images [18GB]](http://images.cocodataset.org/zips/train2017.zip) (118287 images)
-                > COCO 2017 Train = COCO 2015 Train + COCO 2015 Val - COCO 2015 Val Sample 5k
-            - [2017 Val images [1GB]](http://images.cocodataset.org/zips/val2017.zip) (5000 images)
-                > COCO 2017 Val = COCO 2015 Val Sample 5k (formerly known as `minival`)
-            - [2017 Train/Val annotations [241MB]](http://images.cocodataset.org/annotations/annotations_trainval2017.zip)
-
-        1. Extract to data folder, now your folder structure should be like:
-
-            ```
-            easy-faster-rcnn.pytorch
-                - data
-                    - COCO
-                        - annotations
-                            - instances_train2017.json
-                            - instances_val2017.json
-                            ...
-                        - train2017
-                            - 000000000009.jpg
-                            - 000000000025.jpg
-                            ...
-                        - val2017
-                            - 000000000139.jpg
-                            - 000000000285.jpg
-                            ...
-                    - ...
-            ```
-
-1. Build CUDA modules
-
-    1. Define your CUDA architecture code
-
+    2. Extract to data folder:
         ```
-        $ export CUDA_ARCH=sm_61
+        feature-pyramid-networks-project/
+            data/
+                VOCdevkit/
+                    VOC2007/
+                        Annotations/
+                        ImageSets/Main/
+                        JPEGImages/
         ```
 
-        * `sm_61` is for `GTX 1080 Ti`, to see others visit [here](http://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/)
+    For `MS COCO 2017`:
 
-        * To check your GPU architecture, you might need following script to find out GPU information
+    1. Download dataset
+        - [2017 Train images [18GB]](http://images.cocodataset.org/zips/train2017.zip)
+        - [2017 Val images [1GB]](http://images.cocodataset.org/zips/val2017.zip)
+        - [2017 Annotations [241MB]](http://images.cocodataset.org/annotations/annotations_trainval2017.zip)
 
-            ```
-            $ nvidia-smi -L
-            ```
-
-    1. Build `Non-Maximum-Suppression` module
-
+    2. Extract to data folder:
         ```
-        $ nvcc -arch=$CUDA_ARCH -c --compiler-options -fPIC -o nms/src/nms_cuda.o nms/src/nms_cuda.cu
-        $ python nms/build.py
-        $ python -m nms.test.test_nms
-        ```
-
-        * Result after unit testing
-
-            ![](images/test_nms.png?raw=true)
-
-    1. Build `ROI-Align` module (modified from [RoIAlign.pytorch](https://github.com/longcw/RoIAlign.pytorch))
-
-        ```
-        $ nvcc -arch=$CUDA_ARCH -c --compiler-options -fPIC -o roi/align/src/cuda/crop_and_resize_kernel.cu.o roi/align/src/cuda/crop_and_resize_kernel.cu
-        $ python roi/align/build.py
+        feature-pyramid-networks-project/
+            data/
+                COCO/
+                    annotations/
+                    train2017/
+                    val2017/
         ```
 
-1. Install `pycocotools` for `MS COCO 2017` dataset
+2. **Install pycocotools** (for MS COCO 2017 only)
 
-    1. Clone and build COCO API
-
-        ```
-        $ git clone https://github.com/cocodataset/cocoapi
-        $ cd cocoapi/PythonAPI
-        $ make
-        ```
-        > It's not necessary to be under project directory
-
-    1. If an error with message `pycocotools/_mask.c: No such file or directory` has occurred, please install `cython` and try again
-
-        ```
-        $ pip install cython
-        ```
-
-    1. Copy `pycocotools` into project
-
-        ```
-        $ cp -R pycocotools /path/to/project
-        ```
+    ```bash
+    pip install pycocotools
+    ```
 
 
 ## Usage
 
-1. Train
+1. **Train**
 
-    * To apply default configuration (see also `config/`)
-        ```
-        $ python train.py -s=coco2017 -b=resnet101
-        ```
+    ```bash
+    # PASCAL VOC 2007 with ResNet-101
+    python train.py -s=voc2007 -b=resnet101
+    
+    # MS COCO 2017 with custom pooling mode
+    python train.py -s=coco2017 -b=resnet101 --pooling_mode=align
+    ```
 
-    * To apply custom configuration (see also `train.py`)
-        ```
-        $ python train.py -s=coco2017 -b=resnet101 --pooling_mode=align
-        ```
+2. **Evaluate**
 
-1. Evaluate
+    ```bash
+    # Evaluate on VOC 2007
+    python eval.py -s=voc2007 -b=resnet101 outputs/checkpoints-xxx/model-80000.pth
+    
+    # Evaluate on COCO 2017
+    python eval.py -s=coco2017 -b=resnet101 outputs/checkpoints-xxx/model-80000.pth
+    ```
 
-    * To apply default configuration (see also `config/`)
-        ```
-        $ python eval.py -s=coco2017 -b=resnet101 /path/to/checkpoint.pth
-        ```
+3. **Inference**
 
-    * To apply custom configuration (see also `eval.py`)
-        ```
-        $ python eval.py -s=coco2017 -b=resnet101 --pooling_mode=align /path/to/checkpoint.pth
-        ```
-
-1. Infer
-
-    * To apply default configuration (see also `config/`)
-        ```
-        $ python infer.py -c=/path/to/checkpoint.pth -s=coco2017 -b=resnet101 /path/to/input/image.jpg /path/to/output/image.jpg
-        ```
-
-    * To apply custom configuration (see also `infer.py`)
-        ```
-        $ python infer.py -c=/path/to/checkpoint.pth -s=coco2017 -b=resnet101 -p=0.9 /path/to/input/image.jpg /path/to/output/image.jpg
-        ```
+    ```bash
+    # Run inference on single image
+    python infer.py -c=outputs/checkpoints-xxx/model-80000.pth \
+        -s=voc2007 -b=resnet101 \
+        input.jpg output.jpg
+    
+    # With custom probability threshold
+    python infer.py -c=outputs/checkpoints-xxx/model-80000.pth \
+        -s=voc2007 -b=resnet101 -p=0.9 \
+        input.jpg output.jpg
+    ```
 
 
 ## Notes
 
-* Illustration for feature pyramid (see `forward` in `model.py`)
+* **Feature Pyramid Architecture** (see `forward` in `model.py`):
 
     ```python
     # Bottom-up pathway
@@ -389,17 +177,18 @@ An easy implementation of [FPN](https://arxiv.org/pdf/1612.03144.pdf) in PyTorch
     p3 = self.dealiasing_p3(p3)
     p2 = self.dealiasing_p2(p2)
 
-    p6 = F.max_pool2d(input=p5, kernel_size=2)
+    # Fixed: kernel_size=2 (was incorrectly 1 in some implementations)
+    p6 = F.max_pool2d(input=p5, kernel_size=2, stride=2)
     ```
 
     ![](images/feature-pyramid.png)
 
-* Illustration for "find labels for each `anchor_bboxes`" in `region_proposal_network.py`
+* **Modern PyTorch Operations:**
+    - NMS: Uses `torchvision.ops.nms` (no custom CUDA required)
+    - ROI Align: Uses `torchvision.ops.roi_align` (no custom CUDA required)
+    - Fully compatible with PyTorch 2.x
 
-    ![](images/rpn_find_labels_1.png)
 
-    ![](images/rpn_find_labels_2.png)
+## Acknowledgments
 
-* Illustration for NMS CUDA
-
-    ![](images/nms_cuda.png)
+Based on [easy-fpn.pytorch](https://github.com/potterhsu/easy-fpn.pytorch) by potterhsu. Modernized for PyTorch 2.x with bug fixes and simplified dependencies.
