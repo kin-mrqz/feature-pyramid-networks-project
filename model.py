@@ -222,8 +222,8 @@ class Model(nn.Module):
             return classes, transformers
 
         def sample(self, proposal_bboxes: Tensor, gt_classes: Tensor, gt_bboxes: Tensor) -> Tuple[Tensor, Tensor, Tensor, Tensor]:
-            sample_fg_indices = torch.arange(end=len(proposal_bboxes), dtype=torch.long)
-            sample_selected_indices = torch.arange(end=len(proposal_bboxes), dtype=torch.long)
+            sample_fg_indices = torch.arange(end=len(proposal_bboxes), dtype=torch.long).cuda()
+            sample_selected_indices = torch.arange(end=len(proposal_bboxes), dtype=torch.long).cuda()
 
             # find labels for each `proposal_bboxes`
             labels = torch.ones(len(proposal_bboxes), dtype=torch.long).cuda() * -1
@@ -235,10 +235,10 @@ class Model(nn.Module):
             # select 128 samples
             fg_indices = (labels > 0).nonzero().view(-1)
             bg_indices = (labels == 0).nonzero().view(-1)
-            fg_indices = fg_indices[torch.randperm(len(fg_indices))[:min(len(fg_indices), 32)]]
-            bg_indices = bg_indices[torch.randperm(len(bg_indices))[:128 - len(fg_indices)]]
+            fg_indices = fg_indices[torch.randperm(len(fg_indices), device=fg_indices.device)[:min(len(fg_indices), 32)]]
+            bg_indices = bg_indices[torch.randperm(len(bg_indices), device=bg_indices.device)[:128 - len(fg_indices)]]
             selected_indices = torch.cat([fg_indices, bg_indices])
-            selected_indices = selected_indices[torch.randperm(len(selected_indices))]
+            selected_indices = selected_indices[torch.randperm(len(selected_indices), device=selected_indices.device)]
 
             proposal_bboxes = proposal_bboxes[selected_indices]
             gt_proposal_transformers = BBox.calc_transformer(proposal_bboxes, gt_bboxes[proposal_assignments[selected_indices]])
