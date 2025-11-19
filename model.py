@@ -92,7 +92,7 @@ class Model(nn.Module):
         p3 = self.dealiasing_p3(p3)
         p2 = self.dealiasing_p2(p2)
 
-        p6 = F.max_pool2d(input=p5, kernel_size=1, stride=2)
+        p6 = F.max_pool2d(input=p5, kernel_size=2, stride=2)
 
         # NOTE: We define the anchors to have areas of {32^2, 64^2, 128^2, 256^2, 512^2} pixels on {P2, P3, P4, P5, P6} respectively
 
