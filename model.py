@@ -300,6 +300,7 @@ class Model(nn.Module):
                 proposal_class_probs = proposal_class_probs[sorted_indices]
 
                 kept_indices = NMS.suppress(detection_class_bboxes.cuda(), threshold=0.3)
+                kept_indices = kept_indices.cpu()  # Move indices back to CPU
                 detection_class_bboxes = detection_class_bboxes[kept_indices]
                 proposal_class_probs = proposal_class_probs[kept_indices]
 
