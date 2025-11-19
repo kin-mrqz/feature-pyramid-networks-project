@@ -1,40 +1,32 @@
 import os
 import torch
-from torch.utils.ffi import create_extension
+from setuptools import setup
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
+this_dir = os.path.dirname(os.path.realpath(__file__))
 
-sources = ['src/crop_and_resize.c']
-headers = ['src/crop_and_resize.h']
-defines = []
-with_cuda = False
-
+sources = [os.path.join(this_dir, 'src/crop_and_resize.c')]
 extra_objects = []
+
 if torch.cuda.is_available():
     print('Including CUDA code.')
-    sources += ['src/crop_and_resize_gpu.c']
-    headers += ['src/crop_and_resize_gpu.h']
-    defines += [('WITH_CUDA', None)]
-    extra_objects += ['src/cuda/crop_and_resize_kernel.cu.o']
-    with_cuda = True
+    sources.append(os.path.join(this_dir, 'src/crop_and_resize_gpu.c'))
+    extra_objects.append(os.path.join(this_dir, 'src/cuda/crop_and_resize_kernel.cu.o'))
 
-extra_compile_args = ['-std=c99']
+print(this_dir)
 
-this_file = os.path.dirname(os.path.realpath(__file__))
-print(this_file)
-sources = [os.path.join(this_file, fname) for fname in sources]
-headers = [os.path.join(this_file, fname) for fname in headers]
-extra_objects = [os.path.join(this_file, fname) for fname in extra_objects]
-
-ffi = create_extension(
-    '_ext.crop_and_resize',
-    headers=headers,
-    sources=sources,
-    define_macros=defines,
-    relative_to=__file__,
-    with_cuda=with_cuda,
-    extra_objects=extra_objects,
-    extra_compile_args=extra_compile_args
+setup(
+    name='crop_and_resize_ext',
+    ext_modules=[
+        CUDAExtension(
+            name='roi.align._ext.crop_and_resize',
+            sources=sources,
+            extra_objects=extra_objects,
+            extra_compile_args={'cxx': ['-std=c99']},
+            define_macros=[('WITH_CUDA', None)] if torch.cuda.is_available() else [],
+        ),
+    ],
+    cmdclass={
+        'build_ext': BuildExtension
+    }
 )
-
-if __name__ == '__main__':
-    ffi.build()
