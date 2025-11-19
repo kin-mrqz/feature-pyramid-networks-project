@@ -4,8 +4,7 @@ from enum import Enum
 import torch
 from torch import Tensor
 from torch.nn import functional as F
-
-from roi.align.crop_and_resize import CropAndResizeFunction
+from torchvision.ops import roi_align as torchvision_roi_align
 
 
 class Wrapper(object):
@@ -35,19 +34,17 @@ class Wrapper(object):
                 pool.append(F.adaptive_max_pool2d(input=roi_feature_map, output_size=7))
             pool = torch.cat(pool, dim=0)
         elif mode == Wrapper.Mode.ALIGN:
-            x1 = proposal_bboxes[:, 0::4] / scale_x
-            y1 = proposal_bboxes[:, 1::4] / scale_y
-            x2 = proposal_bboxes[:, 2::4] / scale_x
-            y2 = proposal_bboxes[:, 3::4] / scale_y
-
-            crops = CropAndResizeFunction(crop_height=7 * 2, crop_width=7 * 2)(
+            # Use PyTorch's built-in RoI Align from torchvision
+            # torchvision expects boxes in (x1, y1, x2, y2) format (already the case)
+            # and spatial_scale = 1 / stride
+            spatial_scale = 1.0 / ((scale_x + scale_y) / 2.0)
+            pool = torchvision_roi_align(
                 features,
-                torch.cat([y1 / (feature_map_height - 1), x1 / (feature_map_width - 1),
-                           y2 / (feature_map_height - 1), x2 / (feature_map_width - 1)],
-                          dim=1),
-                torch.zeros(proposal_bboxes.shape[0], dtype=torch.int, device=proposal_bboxes.device)
+                [proposal_bboxes],  # List of boxes per image (we have batch_size=1)
+                output_size=(7, 7),
+                spatial_scale=spatial_scale,
+                sampling_ratio=2
             )
-            pool = F.max_pool2d(input=crops, kernel_size=2, stride=2)
         else:
             raise ValueError
 
