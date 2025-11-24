@@ -102,20 +102,3 @@ index created!
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = ...
  ...
 ```
-
-## Results
-
-Full results found in txt files. below is relevant values to compare with table 5 of paper:
-
-Differences due to:
-
-- Hardware: reproduction run on NVIDIA RTX 4080
-
-## Reproduced Results (wip keep above)
-
-- **COCO AP**: 0.277 (Paper: 0.339) - 82% reproduced
-- **AP@0.5**: 0.458 (Paper: 0.569)
-- **Training**: 90,000 iterations on COCO 2017
-- **Architecture**: Faster R-CNN + FPN with ResNet-50
-
-## Challenges
